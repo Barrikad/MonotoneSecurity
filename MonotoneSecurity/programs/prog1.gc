@@ -1,0 +1,9 @@
+x := 3;
+do 
+    true -> skip []
+    x >= 4 -> x := y []
+    x - 4 * 3 < 8 -> y := 4 % y - 3 []
+    x = y -> 4 * -3 []
+    false -> if true -> skip fi
+od;
+skip

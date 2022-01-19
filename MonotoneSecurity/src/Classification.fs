@@ -1,6 +1,7 @@
 module Classification
 open AST
 open ProgramGraph
+open Monotone
 
 let classifyLit classified unclassified lit =
     match Map.tryFind lit classified with
@@ -42,3 +43,23 @@ let classifier
             |> levelJoin (Map.find (Ar v) unclassified)
             |> Map.add (Ar v)
             <| unclassified
+
+let classificationBottom levelBottom classified freeVars =  
+    Map.toSeq classified
+    |> Seq.map fst
+    |> Set.ofSeq
+    |> Set.difference freeVars
+    |> Set.toSeq
+    |> Seq.map (fun k -> (k,levelBottom))
+    |> Map.ofSeq
+
+let classificationAnalysis 
+        algorithm levelJoin levelBottom classified freeVars pg =
+    let analysisBottom = classificationBottom levelBottom classified freeVars 
+    standardAnalysis
+        algorithm 
+        (classificationJoin levelJoin) 
+        (classifier levelJoin levelBottom classified)
+        analysisBottom
+        analysisBottom
+        pg

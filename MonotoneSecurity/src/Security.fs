@@ -5,26 +5,6 @@ open Algorithms
 open Monotone
 open Classification
 
-let classificationBottom levelBottom classified freeVars=  
-    Map.toSeq classified
-    |> Seq.map fst
-    |> Set.ofSeq
-    |> Set.difference freeVars
-    |> Set.toSeq
-    |> Seq.map (fun k -> (k,levelBottom))
-    |> Map.ofSeq
-
-let classificationAnalysis 
-        algorithm levelJoin levelBottom classified freeVars pg =
-    let analysisBottom = classificationBottom levelBottom classified freeVars 
-    standardAnalysis
-        algorithm 
-        (classificationJoin levelJoin) 
-        (classifier levelJoin levelBottom classified)
-        analysisBottom
-        analysisBottom
-        pg
-
 type violation<'level> =
     | Explicit of node * 'level * lit * node
     | Implicit of node * 'level * lit * node
@@ -75,4 +55,19 @@ let edgeViolations
 
 let pgViolations 
         levelLess levelJoin levelBottom classified unclassifiedMap pg =
-    ()
+    Set.fold 
+        (fun vs (qs,act,imps,qf) -> 
+            edgeViolations 
+                levelLess levelJoin levelBottom classified
+                (Map.find qs unclassifiedMap) (qs,act,imps,qf)
+            |> Set.union vs)
+        Set.empty
+        pg
+
+let astViolations 
+        algorithm levelLess levelJoin levelBottom classified freeVars ast =
+    let pg = snd (edgesC Set.empty Start Start Finish ast)
+    let unclassifiedMap = 
+        classificationAnalysis 
+            algorithm levelJoin levelBottom classified freeVars pg
+    pgViolations levelLess levelJoin levelBottom classified unclassifiedMap pg

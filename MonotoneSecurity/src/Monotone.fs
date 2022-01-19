@@ -3,11 +3,7 @@ module Monotone
 open AST
 open Algorithms
 
-let insert q = id
-
-let extract a = Some (Start,a)
-
-let empty = id
+let startNodes pg = Set.map (fun (q,_,_,_) -> q) pg
 
 let analyzeEdge join analysisFun (analysis,algorithm) (qs,act,imps,qf) =
     let qfAssignment = Map.find qf analysis
@@ -25,8 +21,9 @@ let rec analyze join analysisFun pg (analysis,algorithm) =
         |> Set.fold (analyzeEdge join analysisFun) (analysis,algorithm')
         |> analyze join analysisFun pg
 
-let standardAnalysis join analysisFun bottom startAssignment pg algorithmType =
-    let algorithm = empty algorithmType
+let standardAnalysis algorithmType join analysisFun bottom startAssignment pg =
+    let algorithm = 
+        Set.fold (fun a q -> insert q a) (empty algorithmType) (startNodes pg)
     let analysis = 
         Set.fold 
             (fun anls (qs,_,_,qf) -> Map.add qs bottom (Map.add qf bottom anls))

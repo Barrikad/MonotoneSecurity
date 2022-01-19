@@ -23,6 +23,7 @@
     <Compile Include="src\Algorithms.fs" />
     <Compile Include="src\Monotone.fs" />
     <Compile Include="src\Classification.fs" />
+    <Compile Include="src\Security.fs" />
     <Compile Include="tst/ProgramGraphTest.fs" />
     <Compile Include="tst\ClassificationTest.fs" />
     <Compile Include="tst\SecurityTest.fs" />

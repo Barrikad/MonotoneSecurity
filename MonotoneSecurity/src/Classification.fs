@@ -15,6 +15,8 @@ let classificationJoin levelJoin c1 c2 =
 
 let classifier 
         levelJoin levelBottom classified unclassified (qs,act,imps,qf) = 
+    let litsToLevels = Set.map (classifyLit classified unclassified)
+    let joinManyLevels = joinMany levelJoin levelBottom
     match act with
     | Skp
     | Tst _ -> unclassified
@@ -22,16 +24,21 @@ let classifier
         match Map.tryFind (Vr v) classified with
         | Some _ -> unclassified
         | None ->
-            Set.map (classifyLit classified unclassified) (freeVarsArtm a)
-            |> Set.union (Set.map (classifyLit classified unclassified) imps)
-            |> joinMany levelJoin levelBottom     
+            freeVarsArtm a
+            |> Set.union imps
+            |> litsToLevels
+            |> joinManyLevels 
             |> Map.add (Vr v)
             <| unclassified
     | AsA (v, a1, a2) ->
         match Map.tryFind (Ar v) classified with
         | Some _ -> unclassified
         | None -> 
-            Set.map (classifyLit classified unclassified) (freeVarsArtm a2)
-            |> joinMany levelJoin levelBottom
+            freeVarsArtm a2
+            |> Set.union (freeVarsArtm a1)
+            |> Set.union imps
+            |> litsToLevels
+            |> joinManyLevels
+            |> levelJoin (Map.find (Ar v) unclassified)
             |> Map.add (Ar v)
             <| unclassified

@@ -95,7 +95,7 @@ let ``Classification.classifier Test AsA classified, No Change`` () =
     )
     
 [<Fact>]
-let ``Classification.classifier Test AsA unclassified, No Imps 1`` () =
+let ``Classification.classifier Test AsA unclassified, a2 is counted`` () =
     Assert.Equal<Map<lit,level>>(
         Map.add (Ar 4u) Mid1 unclassified,
         classifier 
@@ -103,3 +103,29 @@ let ``Classification.classifier Test AsA unclassified, No Imps 1`` () =
             classified unclassified 
             (Start,AsA (4u,Num 2,Plus (Var 1u,Var 5u)),Set [],Finish))
             
+[<Fact>]
+let ``Classification.classifier Test AsA unclassified, a1 is counted`` () =
+    Assert.Equal<Map<lit,level>>(
+        Map.add (Ar 4u) Top unclassified,
+        classifier 
+            levelJoin Bottom 
+            classified unclassified 
+            (Start,AsA (4u,Var 6u,Plus (Var 1u,Var 5u)),Set [],Finish))
+            
+[<Fact>]
+let ``Classification.classifier Test AsA unclassified, imps are counted`` () =
+    Assert.Equal<Map<lit,level>>(
+        Map.add (Ar 4u) Top unclassified,
+        classifier 
+            levelJoin Bottom 
+            classified unclassified 
+            (Start,AsA (4u,Num 6,Plus (Var 1u,Var 5u)),Set [Vr 6u],Finish))
+            
+[<Fact>]
+let ``Classification.classifier Test AsA unclassified, previous is counted`` () =
+    Assert.Equal<Map<lit,level>>(
+        Map.add (Ar 6u) Top unclassified,
+        classifier 
+            levelJoin Bottom 
+            classified unclassified 
+            (Start,AsA (6u,Num 6,Plus (Var 1u,Var 5u)),Set [],Finish))

@@ -3,21 +3,7 @@ open AST
 open Classification
 open Xunit
 open Algorithms
-
-type level =
-    | Bottom
-    | Mid1
-    | Mid2
-    | Top
-
-let levelJoin l1 l2 =
-    match l1, l2 with
-    | Bottom, l
-    | l, Bottom -> l
-    | Top, _
-    | _, Top -> Top
-    | _ when l1 = l2 -> l1
-    | _ -> Top
+open Lattices
 
 let classified = Map [
     (Vr 0u,Bottom);(Vr 1u,Mid1);(Vr 2u,Mid2);(Vr 3u,Top);
@@ -29,105 +15,105 @@ let unclassified = Map [
 
 [<Fact>]
 let ``Classification.joinMany Test Empty`` () =
-    Assert.Equal(Bottom,joinMany levelJoin Bottom Set.empty)
+    Assert.Equal(Bottom,joinMany level1Join Bottom Set.empty)
 
 [<Fact>]
 let ``Classification.joinMany Test Bottom, Mid1`` () =
-    Assert.Equal(Mid1,joinMany levelJoin Bottom (Set [Bottom;Mid1]))
+    Assert.Equal(Mid1,joinMany level1Join Bottom (Set [Bottom;Mid1]))
 
 [<Fact>]
 let ``Classification.joinMany Test Bottom, Mid1, Mid2`` () =
-    Assert.Equal(Top,joinMany levelJoin Bottom (Set [Bottom;Mid1;Mid2]))
+    Assert.Equal(Top,joinMany level1Join Bottom (Set [Bottom;Mid1;Mid2]))
 
 [<Fact>]
 let ``Classification.classifier Test Skp, No Change`` () =
-    Assert.Equal<Map<lit,level>>(
+    Assert.Equal<Map<lit,level1>>(
         unclassified,
         classifier 
-            levelJoin Bottom classified unclassified (Start,Skp,Set [],Finish)
+            level1Join Bottom classified unclassified (Start,Skp,Set [],Finish)
     )
 
 [<Fact>]
 let ``Classification.classifier Test Tst, No Change`` () =
-    Assert.Equal<Map<lit,level>>(
+    Assert.Equal<Map<lit,level1>>(
         unclassified,
         classifier 
-            levelJoin Bottom classified unclassified (Start,Tst True,Set [],Finish)
+            level1Join Bottom classified unclassified (Start,Tst True,Set [],Finish)
     )
 
 [<Fact>]
 let ``Classification.classifier Test AsV Classified, No Change`` () =
-    Assert.Equal<Map<lit,level>>(
+    Assert.Equal<Map<lit,level1>>(
         unclassified,
         classifier 
-            levelJoin Bottom 
+            level1Join Bottom 
             classified unclassified 
             (Start,AsV (0u,Plus (Var 0u,Var 1u)),Set [],Finish)
     )
 
 [<Fact>]
 let ``Classification.classifier Test AsV unclassified, No Imps`` () =
-    Assert.Equal<Map<lit,level>>(
+    Assert.Equal<Map<lit,level1>>(
         Map.add (Vr 4u) Mid1 unclassified,
         classifier 
-            levelJoin Bottom 
+            level1Join Bottom 
             classified unclassified 
             (Start,AsV (4u,Plus (Var 1u,Var 5u)),Set [],Finish)
     )
 
 [<Fact>]
 let ``Classification.classifier Test AsV unclassified, Some Imps`` () =
-    Assert.Equal<Map<lit,level>>(
+    Assert.Equal<Map<lit,level1>>(
         Map.add (Vr 4u) Top unclassified,
         classifier 
-            levelJoin Bottom 
+            level1Join Bottom 
             classified unclassified 
             (Start,AsV (4u,Plus (Var 1u,Var 5u)),Set [Vr 6u],Finish)
     )
 
 [<Fact>]
 let ``Classification.classifier Test AsA classified, No Change`` () =
-    Assert.Equal<Map<lit,level>>(
+    Assert.Equal<Map<lit,level1>>(
         unclassified,
         classifier 
-            levelJoin Bottom 
+            level1Join Bottom 
             classified unclassified 
             (Start,AsA (0u,Num 2,Plus (Var 1u,Var 5u)),Set [Vr 6u],Finish)
     )
     
 [<Fact>]
 let ``Classification.classifier Test AsA unclassified, a2 is counted`` () =
-    Assert.Equal<Map<lit,level>>(
+    Assert.Equal<Map<lit,level1>>(
         Map.add (Ar 4u) Mid1 unclassified,
         classifier 
-            levelJoin Bottom 
+            level1Join Bottom 
             classified unclassified 
             (Start,AsA (4u,Num 2,Plus (Var 1u,Var 5u)),Set [],Finish))
             
 [<Fact>]
 let ``Classification.classifier Test AsA unclassified, a1 is counted`` () =
-    Assert.Equal<Map<lit,level>>(
+    Assert.Equal<Map<lit,level1>>(
         Map.add (Ar 4u) Top unclassified,
         classifier 
-            levelJoin Bottom 
+            level1Join Bottom 
             classified unclassified 
             (Start,AsA (4u,Var 6u,Plus (Var 1u,Var 5u)),Set [],Finish))
             
 [<Fact>]
 let ``Classification.classifier Test AsA unclassified, imps are counted`` () =
-    Assert.Equal<Map<lit,level>>(
+    Assert.Equal<Map<lit,level1>>(
         Map.add (Ar 4u) Top unclassified,
         classifier 
-            levelJoin Bottom 
+            level1Join Bottom 
             classified unclassified 
             (Start,AsA (4u,Num 6,Plus (Var 1u,Var 5u)),Set [Vr 6u],Finish))
             
 [<Fact>]
 let ``Classification.classifier Test AsA unclassified, previous is counted`` () =
-    Assert.Equal<Map<lit,level>>(
+    Assert.Equal<Map<lit,level1>>(
         Map.add (Ar 6u) Top unclassified,
         classifier 
-            levelJoin Bottom 
+            level1Join Bottom 
             classified unclassified 
             (Start,AsA (6u,Num 6,Plus (Var 1u,Var 5u)),Set [],Finish))
 
@@ -139,14 +125,14 @@ let freeVars = Set [
     Ar 4u;Ar 5u;Ar 6u;Ar 7u]
 
 [<Fact>]
-let ``Security.classificationBottom Test`` () =
-    Assert.Equal<Map<lit,level>>(
+let ``Classification.classificationBottom Test`` () =
+    Assert.Equal<Map<lit,level1>>(
         Map.map (fun k _ -> Bottom) unclassified,
         classificationBottom Bottom classified freeVars
     )
 
 [<Fact>]
-let ``Security.classificationAnalysis Test 1`` () =
+let ``Classification.classificationAnalysis Test 1`` () =
     let classBottom = classificationBottom Bottom classified freeVars
     let pg = Set [
         (Start,Skp,Set [],Mid 1u)
@@ -173,7 +159,7 @@ let ``Security.classificationAnalysis Test 1`` () =
         (Mid 8u, Map.add (Ar 4u) Top (Map.add (Vr 4u) Mid1 classBottom))
         (Finish, Map.add (Ar 4u) Top (Map.add (Vr 4u) Mid1 classBottom))
     ]
-    Assert.Equal<Map<node,Map<lit,level>>>(
+    Assert.Equal<Map<node,Map<lit,level1>>>(
         expected,
-        classificationAnalysis Stack levelJoin Bottom classified freeVars pg
+        classificationAnalysis Stack level1Join Bottom classified freeVars pg
     )

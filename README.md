@@ -6,7 +6,7 @@ The analysis happens in the following steps:
 - An analysis in the monotone framework derives the security levels of the unclassified variables and arrays in the different nodes
 - The edges of the program graph are examined with the implicit flows and the derived security levels as context, and a set of security violations is returned
 
-## Overview of the repository
+## Overview of the F# project
 - <code>MonotoneSecurity.fsproj</code> defines the order of compilation and imports packages
 - <code>src/AST.fs</code> contains the types used for ASTs and program graphs
 - <code>src/ProgramGraph.fs</code> contains the functions for deriving an annotated program graph from an AST
